@@ -6,7 +6,7 @@ let db = {
 }
 
 mongoose.Promise = global.Promise;
-mongoose.connect(db.mlab || db.localhost);
+mongoose.connect(process.env.MONGODB_URI || db.mlab);
 
 module.exports = {
   mongoose
