@@ -1,6 +1,10 @@
 require('./config/config');
 const _ = require('lodash');
 
+const path = require('path');
+const public = path.join(__dirname, '../public');
+const private = path.join(__dirname, '../private');
+
 var express = require('express');
 var bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
@@ -11,11 +15,20 @@ var {User} = require('./models/user');
 
 var {authenticate} = require ('./middleware/authenticate');
 
-
 var app = express();
 const port = process.env.PORT;
 
 app.use(bodyParser.json());
+app.use(express.static(public));
+app.use(express.static(private));
+
+app.get('/', (req, res) => {
+  res.sendFile(`${public}/index.html`);
+})
+
+// app.get('/home', authenticate, (req, res) => {
+//   res.sendFile(`${private}/home.html`);
+// })
 
 app.post('/todos', authenticate, (req, res) => {
   var todo = new Todo ({
@@ -81,13 +94,14 @@ app.delete('/todos/:id', authenticate, (req,res) => {
 })
 
 app.post('/users', (req, res) => {
+  console.log(req.body);
   var body = _.pick(req.body, ['email', 'password']);
   var user = new User(body);
 
   user.save().then(() => {
     return user.generateAuthToken();
   }).then((token) => {
-    res.header('x-auth', token).send(user);
+    res.header('x-auth', token).sendFile(`${private}/home.html`);
   }).catch((e) => {
     res.status(400).send(e);
   });
